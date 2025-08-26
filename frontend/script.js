@@ -27,6 +27,7 @@ let localStream, remoteStream, peerConnection, socket;
 let remotePeerId = null;
 let currentUser = null; 
 
+// WebRTC STUN Sunucusu Ayarları
 const iceServers = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -34,6 +35,7 @@ const iceServers = {
     ]
 };
 
+// Backend URL'si
 const backendUrl = 'https://amicus-video-chat-last.onrender.com';
 
 function showInitialScreen() {
@@ -155,15 +157,19 @@ async function init() {
         
         socket.on('receiveCall', async (data) => {
             console.log("Gelen arama:", data);
-            await setupPeerConnection(false);
+            
+            if (!peerConnection) {
+                await setupPeerConnection(false);
+            }
+
             try {
-                if (data.signal.type === 'offer' || data.signal.type === 'answer') {
+                if (data.signal.type === 'offer') {
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(data.signal));
-                    if (data.signal.type === 'offer') {
-                        const answer = await peerConnection.createAnswer();
-                        await peerConnection.setLocalDescription(answer);
-                        socket.emit('callUser', { userToCall: data.from, signalData: answer, from: currentUser.socketId });
-                    }
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    socket.emit('callUser', { userToCall: data.from, signalData: answer, from: currentUser.socketId });
+                } else if (data.signal.type === 'answer') {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.signal));
                 } else if (data.signal.candidate) {
                     await peerConnection.addIceCandidate(new RTCIceCandidate(data.signal));
                 }
@@ -174,7 +180,11 @@ async function init() {
 
         socket.on('callAccepted', async (signal) => {
             console.log("Arama kabul edildi.");
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+            if (signal.type === 'answer') {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+            } else if (signal.candidate) {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(signal));
+            }
         });
 
     } catch (e) {
