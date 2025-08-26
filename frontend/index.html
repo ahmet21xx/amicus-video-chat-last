@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<!-- Kayıt -->
+
 <main id="registerContainer" class="auth-container" style="display:none;">
     <div class="auth-box">
         <h1>AMİCUS</h1>
@@ -19,7 +19,6 @@
     </div>
 </main>
 
-<!-- Giriş -->
 <main id="loginContainer" class="auth-container">
     <div class="auth-box">
         <h1>AMİCUS</h1>
@@ -31,23 +30,34 @@
     </div>
 </main>
 
-<!-- Sohbet -->
 <main id="chatContainer" class="chat-container" style="display:none;">
-    <div class="user-id-display">ID: <span id="currentUserId"></span></div>
-    <div class="video-container">
-        <div class="local-video-wrapper"><video id="localVideo" autoplay muted></video><div class="video-overlay">Ben</div></div>
-        <div class="remote-video-wrapper"><video id="remoteVideo" autoplay></video><div class="video-overlay">Karşı Taraf</div></div>
+    <div class="user-id-display">
+        ID: <span id="currentUserId"></span>
     </div>
+    
+    <div class="video-container">
+        <div class="local-video-wrapper">
+            <video id="localVideo" autoplay muted></video>
+            <div class="video-overlay">Ben</div>
+        </div>
+        <div class="remote-video-wrapper">
+            <video id="remoteVideo" autoplay></video>
+            <div class="video-overlay">Karşı Taraf</div>
+        </div>
+    </div>
+
     <div class="action-buttons">
         <button id="findMatchBtn" class="control-button">Yeni Eşleşme Bul</button>
         <button id="disconnectBtn" class="control-button">Bağlantıyı Kes</button>
     </div>
+
     <div class="friend-actions-container">
         <h3>Arkadaş Ekle</h3>
         <div class="add-friend-input">
             <input type="number" id="friendInput" placeholder="Arkadaş ID" class="form-input">
             <button id="addFriendBtn" class="control-button">Ekle</button>
         </div>
+        
         <div class="friends-list-container">
             <h3>Arkadaşlarım</h3>
             <ul id="friendsList"></ul>

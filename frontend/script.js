@@ -26,12 +26,12 @@ let currentUser = null;
 const iceServers = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' }
+        { urls: 'stun:stun1.l.google.com:19302' },
     ]
 };
+
 const backendUrl = 'https://amicus-video-chat-last.onrender.com';
 
-// Başlangıç ekranı
 function showInitialScreen() {
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
@@ -50,212 +50,154 @@ function showInitialScreen() {
 }
 showInitialScreen();
 
-// Ekran geçişleri
 goToLogin.addEventListener('click', e => {
     e.preventDefault();
     registerContainer.style.display = 'none';
     loginContainer.style.display = 'flex';
 });
+
 goToRegister.addEventListener('click', e => {
     e.preventDefault();
     loginContainer.style.display = 'none';
     registerContainer.style.display = 'flex';
 });
 
-// Kayıt işlemi
 registerBtn.addEventListener('click', async () => {
     const username = registerUsername.value.trim();
     const password = registerPassword.value.trim();
-    if (!username || !password) return alert('Lütfen kullanıcı adı ve şifre girin.');
+    if (!username || !password) { alert('Lütfen kullanıcı adı ve şifre girin.'); return; }
 
     try {
-        const response = await fetch(`${backendUrl}/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+        const res = await fetch(`${backendUrl}/register`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({username,password})
         });
-        const data = await response.json();
-        if (response.ok) {
-            alert('Kayıt başarılı! Giriş yapabilirsiniz.');
-            registerContainer.style.display = 'none';
-            loginContainer.style.display = 'flex';
-        } else alert('Kayıt başarısız: ' + data.message);
-    } catch (err) {
-        console.error(err);
-        alert('Kayıt sırasında hata oluştu.');
-    }
+        const data = await res.json();
+        if(res.ok){
+            alert('Kayıt başarılı! Lütfen giriş yapın.');
+            registerContainer.style.display='none';
+            loginContainer.style.display='flex';
+        } else { alert('Kayıt başarısız: '+data.message); }
+    } catch(err){ console.error(err); alert('Kayıt sırasında bir hata oluştu.'); }
 });
 
-// Giriş işlemi
 loginBtn.addEventListener('click', async () => {
     const username = loginUsername.value.trim();
     const password = loginPassword.value.trim();
-    if (!username || !password) return alert('Lütfen kullanıcı adı ve şifre girin.');
+    if (!username || !password) { alert('Lütfen kullanıcı adı ve şifre girin.'); return; }
 
     try {
-        const response = await fetch(`${backendUrl}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
+        const res = await fetch(`${backendUrl}/login`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({username,password})
         });
-        const data = await response.json();
-        if (response.ok) {
+        const data = await res.json();
+        if(res.ok){
+            alert('Giriş başarılı!');
             currentUser = data.user;
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            loginContainer.style.display = 'none';
-            chatContainer.style.display = 'flex';
-            currentUserIdDisplay.textContent = currentUser.id;
-            await init();
+            loginContainer.style.display='none';
+            chatContainer.style.display='flex';
+            currentUserIdDisplay.textContent=currentUser.id;
+            init();
             updateFriendsList();
-        } else {
-            alert('Giriş başarısız: ' + data.message);
-        }
-    } catch (err) {
-        console.error(err);
-        alert('Giriş sırasında hata oluştu.');
-    }
+        } else { alert('Giriş başarısız: '+data.message); }
+    } catch(err){ console.error(err); alert('Giriş sırasında bir hata oluştu.'); }
 });
 
-// WebRTC ve Socket.io başlat
 async function init() {
     try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        localVideo.srcObject = localStream;
+        localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+        localVideo.srcObject=localStream;
 
         socket = io(backendUrl, { query: { userId: currentUser.id } });
 
-        socket.on('connect', () => console.log('Sunucuya bağlandı', socket.id));
+        socket.on('connect', () => { console.log('Sunucuya bağlandı, ID:', socket.id); });
+
+        socket.on('yourId', id => { currentUser.socketId=id; });
 
         socket.on('matchFound', data => {
             remotePeerId = data.partnerId;
-            if (remotePeerId < socket.id) setupPeerConnection(true);
+            if(remotePeerId<currentUser.socketId){ setupPeerConnection(true); }
         });
 
         socket.on('receiveCall', async data => {
             await setupPeerConnection(false);
-            if (data.signal) {
-                try {
-                    if (data.signal.type === 'offer' || data.signal.type === 'answer') {
-                        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.signal));
-                        if (data.signal.type === 'offer') {
-                            const answer = await peerConnection.createAnswer();
-                            await peerConnection.setLocalDescription(answer);
-                            socket.emit('callUser', { userToCall: data.from, signalData: answer, from: socket.id });
-                        }
-                    } else if (data.signal.candidate) {
-                        await peerConnection.addIceCandidate(new RTCIceCandidate(data.signal));
+            try{
+                if(data.signal.type==='offer'||data.signal.type==='answer'){
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.signal));
+                    if(data.signal.type==='offer'){
+                        const answer=await peerConnection.createAnswer();
+                        await peerConnection.setLocalDescription(answer);
+                        socket.emit('callUser',{userToCall:data.from, signalData:answer, from:currentUser.socketId});
                     }
-                } catch (e) {
-                    console.error('Sinyal işlenirken hata:', e);
+                } else if(data.signal.candidate){
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.signal));
                 }
-            }
+            } catch(e){ console.error(e); }
         });
 
         socket.on('callAccepted', async signal => {
             await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
         });
 
-    } catch (e) {
-        console.error('Medya akışı hatası:', e);
-        alert('Kamera ve mikrofon erişimi gerekli!');
-    }
+    } catch(e){ console.error('Medya akışı hatası:', e); alert('Kamera ve mikrofon erişimi gerekli!'); }
 }
 
-// PeerConnection kur
-async function setupPeerConnection(isCaller) {
-    if (peerConnection) peerConnection.close();
+async function setupPeerConnection(isCaller){
+    if(peerConnection) peerConnection.close();
     peerConnection = new RTCPeerConnection(iceServers);
-    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-    peerConnection.ontrack = event => { remoteVideo.srcObject = event.streams[0]; };
-    peerConnection.onicecandidate = event => {
-        if (event.candidate && remotePeerId) {
-            socket.emit('callUser', { userToCall: remotePeerId, signalData: event.candidate, from: socket.id });
-        }
-    };
-
-    if (isCaller) {
-        const offer = await peerConnection.createOffer();
+    localStream.getTracks().forEach(track=>peerConnection.addTrack(track,localStream));
+    peerConnection.ontrack=event=>{ remoteVideo.srcObject=event.streams[0]; };
+    peerConnection.onicecandidate=event=>{ if(event.candidate){ socket.emit('callUser',{userToCall:remotePeerId, signalData:event.candidate, from:currentUser.socketId}); } };
+    if(isCaller){
+        const offer=await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
-        socket.emit('callUser', { userToCall: remotePeerId, signalData: offer, from: socket.id });
+        socket.emit('callUser',{userToCall:remotePeerId, signalData:offer, from:currentUser.socketId});
     }
 }
 
-// Eşleşme bul
-findMatchBtn.addEventListener('click', () => {
-    if (!socket) return alert('Lütfen giriş yapın!');
-    if (peerConnection) peerConnection.close();
-    remoteVideo.srcObject = null;
-    remotePeerId = null;
+findMatchBtn.addEventListener('click', async ()=>{
+    if(!socket){ alert('Lütfen önce giriş yapın!'); return; }
+    if(peerConnection) peerConnection.close();
+    remoteVideo.srcObject=null;
+    remotePeerId=null;
+    await init();
     socket.emit('findMatch');
 });
 
-// Bağlantıyı kes
-disconnectBtn.addEventListener('click', () => {
-    if (peerConnection) {
-        peerConnection.close();
-        peerConnection = null;
-        remoteVideo.srcObject = null;
-        remotePeerId = null;
-        console.log('Bağlantı kesildi');
-    }
+disconnectBtn.addEventListener('click', ()=>{
+    if(peerConnection){ peerConnection.close(); peerConnection=null; remoteVideo.srcObject=null; remotePeerId=null; }
 });
 
-// Arkadaş ekleme
-addFriendBtn.addEventListener('click', async () => {
-    if (!currentUser) return alert('Önce giriş yapın.');
-    const friendId = parseInt(friendInput.value.trim());
-    if (isNaN(friendId)) return alert('Geçerli ID girin.');
-    if (friendId === currentUser.id) return alert('Kendinizi ekleyemezsiniz.');
-
-    try {
-        const response = await fetch(`${backendUrl}/add-friend`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fromId: currentUser.id, toId: friendId })
-        });
-        const data = await response.json();
-        alert(data.message);
-        if (response.ok) updateFriendsList();
-    } catch (err) {
-        console.error('Arkadaş ekleme hatası:', err);
-        alert('Hata oluştu.');
-    }
-});
-
-// Arkadaş listesini güncelle
-async function updateFriendsList() {
-    if (!currentUser) return;
-    try {
-        const response = await fetch(`${backendUrl}/friends/${currentUser.id}`);
-        const data = await response.json();
-        if (response.ok) {
-            friendsListContainer.innerHTML = '';
-            data.friends.forEach(friend => {
-                const li = document.createElement('li');
-                li.textContent = friend.username;
-                li.addEventListener('click', () => startCallWithFriend(friend.id));
+async function updateFriendsList(){
+    if(!currentUser) return;
+    try{
+        const res=await fetch(`${backendUrl}/friends/${currentUser.id}`);
+        const data=await res.json();
+        if(res.ok){
+            friendsListContainer.innerHTML='';
+            data.friends.forEach(friend=>{
+                const li=document.createElement('li');
+                li.textContent=friend.username;
+                li.addEventListener('click',()=>startCallWithFriend(friend.id));
                 friendsListContainer.appendChild(li);
             });
         }
-    } catch (err) {
-        console.error('Arkadaş listesi çekilemedi:', err);
-    }
+    }catch(err){ console.error(err); }
 }
 
-// Arkadaşla çağrı başlat
-async function startCallWithFriend(friendId) {
-    if (!socket) return alert('Lütfen giriş yapın!');
-    if (peerConnection) peerConnection.close();
-    remoteVideo.srcObject = null;
-    try {
-        const response = await fetch(`${backendUrl}/get-user-socket-id/${friendId}`);
-        if (!response.ok) { alert((await response.json()).message); return; }
-        const data = await response.json();
-        const friendSocketId = data.socketId;
-        if (!friendSocketId) return alert('Arkadaş çevrimdışı.');
-        remotePeerId = friendSocketId;
+async function startCallWithFriend(friendId){
+    if(!socket){ alert('Lütfen önce giriş yapın!'); return; }
+    if(peerConnection) peerConnection.close();
+    remoteVideo.srcObject=null;
+    try{
+        const res=await fetch(`${backendUrl}/get-user-socket-id/${friendId}`);
+        if(!res.ok){ alert((await res.json()).message); return; }
+        const data=await res.json();
+        const friendSocketId=data.socketId;
+        if(!friendSocketId){ alert('Arkadaşınız şu anda çevrimdışı.'); return; }
+        remotePeerId=friendSocketId;
         await setupPeerConnection(true);
-        console.log(`Arkadaşa arama başlatılıyor: ID ${friendId}, Socket ID ${friendSocketId}`);
-    } catch (err) { console.error('Arkadaş socket ID hatası:', err); alert('Hata oluştu.'); }
+    }catch(err){ console.error(err); alert('Arkadaşınıza bağlanırken hata oluştu.'); }
 }
