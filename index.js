@@ -31,6 +31,7 @@ if (!fs.existsSync(USERS_FILE) || fs.readFileSync(USERS_FILE, 'utf8').trim() ===
     }
 }
 
+// Frontend dosyalarını sun
 app.use(express.static(path.join(__dirname, 'frontend')));
 
 app.post('/register', (req, res) => {
