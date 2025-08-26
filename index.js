@@ -6,7 +6,6 @@ const path = require('path');
 const { Server } = require("socket.io");
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 
 const server = http.createServer(app);
@@ -23,7 +22,6 @@ let nextUserId = 1;
 // Online olan kullanıcıların ID'leri ve Socket ID'lerini tutar
 let onlineUsers = {}; 
 
-// Eğer users.json yoksa veya boşsa, başlangıç verilerini oluştur
 if (!fs.existsSync(USERS_FILE) || fs.readFileSync(USERS_FILE, 'utf8').trim() === '') {
     fs.writeFileSync(USERS_FILE, JSON.stringify([]));
 } else {
@@ -132,7 +130,6 @@ app.get('/get-user-socket-id/:userId', (req, res) => {
     }
 });
 
-// Rastgele eşleşme havuzu
 let waitingUsers = [];
 
 io.on('connection', (socket) => {
@@ -140,15 +137,12 @@ io.on('connection', (socket) => {
     const userId = socket.handshake.query.userId;
     console.log(`Kullanıcı ID'si: ${userId}`);
 
-    // Kullanıcı ID'si ile Socket ID'sini eşleştirme
     if (userId) {
         onlineUsers[userId] = socket.id;
     }
 
-    // Kullanıcıya kendi ID'sini gönder
     socket.emit('yourId', socket.id);
 
-    // Rastgele eşleşme bulma
     socket.on('findMatch', () => {
         if (waitingUsers.length > 0) {
             const partnerSocketId = waitingUsers.shift(); 
@@ -168,7 +162,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // WebRTC sinyalizasyon olayları
     socket.on('callUser', (data) => {
         io.to(data.userToCall).emit('receiveCall', { signal: data.signalData, from: data.from });
     });
@@ -177,13 +170,10 @@ io.on('connection', (socket) => {
         io.to(data.to).emit('callAccepted', data.signal);
     });
     
-    // Bağlantı kesildiğinde
     socket.on('disconnect', () => {
         console.log('Kullanıcı ayrıldı:', socket.id);
-        // Havuzdan kullanıcıyı kaldır
         waitingUsers = waitingUsers.filter(id => id !== socket.id);
         
-        // Online kullanıcılar listesinden kaldır
         for (const [userId, socketId] of Object.entries(onlineUsers)) {
             if (socketId === socket.id) {
                 delete onlineUsers[userId];
@@ -193,7 +183,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// Sunucuyu başlat (Express ve Socket.IO için)
 const port = process.env.PORT || 3000;
 server.listen(port, () => {
     console.log(`Backend çalışıyor: http://localhost:${port}`);

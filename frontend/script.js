@@ -27,7 +27,6 @@ let localStream, remoteStream, peerConnection, socket;
 let remotePeerId = null;
 let currentUser = null; 
 
-// WebRTC STUN Sunucusu Ayarları
 const iceServers = {
     iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -35,10 +34,8 @@ const iceServers = {
     ]
 };
 
-// Backend URL'si
 const backendUrl = 'https://amicus-video-chat-last.onrender.com';
 
-// Sayfa yüklenince önce kayıt ekranı göster
 function showInitialScreen() {
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
@@ -57,21 +54,18 @@ function showInitialScreen() {
 }
 showInitialScreen();
 
-// Kayıt ekranı -> Login ekranı
 goToLogin.addEventListener('click', (e) => {
     e.preventDefault();
     registerContainer.style.display = 'none';
     loginContainer.style.display = 'flex';
 });
 
-// Login ekranı -> Kayıt ekranı
 goToRegister.addEventListener('click', (e) => {
     e.preventDefault();
     loginContainer.style.display = 'none';
     registerContainer.style.display = 'flex';
 });
 
-// Kayıt butonu
 registerBtn.addEventListener('click', async () => {
     const username = registerUsername.value.trim();
     const password = registerPassword.value.trim();
@@ -99,7 +93,6 @@ registerBtn.addEventListener('click', async () => {
     }
 });
 
-// Login butonu
 loginBtn.addEventListener('click', async () => {
     const username = loginUsername.value.trim();
     const password = loginPassword.value.trim();
@@ -132,7 +125,6 @@ loginBtn.addEventListener('click', async () => {
     }
 });
 
-// init fonksiyonu
 async function init() {
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -163,7 +155,7 @@ async function init() {
         
         socket.on('receiveCall', async (data) => {
             console.log("Gelen arama:", data);
-            await setupPeerConnection(false); // setupPeerConnection artık async
+            await setupPeerConnection(false);
             try {
                 if (data.signal.type === 'offer' || data.signal.type === 'answer') {
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(data.signal));
@@ -191,7 +183,6 @@ async function init() {
     }
 }
 
-// PeerConnection'ı kuran fonksiyon
 async function setupPeerConnection(isCaller) {
     if (peerConnection) {
         peerConnection.close();
@@ -229,7 +220,6 @@ async function setupPeerConnection(isCaller) {
     }
 }
 
-// Yeni Eşleşme Bul butonu
 findMatchBtn.addEventListener('click', async () => {
     if (!socket) {
         alert('Lütfen önce giriş yapın!');
@@ -239,12 +229,10 @@ findMatchBtn.addEventListener('click', async () => {
     if (peerConnection) peerConnection.close();
     remoteVideo.srcObject = null;
     remotePeerId = null;
-
     await init();
     socket.emit('findMatch');
 });
 
-// Bağlantıyı kesme butonu
 disconnectBtn.addEventListener('click', () => {
     if (peerConnection) {
         peerConnection.close();
@@ -255,8 +243,6 @@ disconnectBtn.addEventListener('click', () => {
     }
 });
 
-
-// Arkadaş Ekleme butonu
 addFriendBtn.addEventListener('click', async () => {
     if (!currentUser) {
         alert('Lütfen önce giriş yapın!');
@@ -293,8 +279,6 @@ addFriendBtn.addEventListener('click', async () => {
     }
 });
 
-
-// Arkadaş listesini güncelleyen fonksiyon
 async function updateFriendsList() {
     if (!currentUser) return;
 
@@ -316,7 +300,6 @@ async function updateFriendsList() {
     }
 }
 
-// Arkadaşa görüntülü arama başlatan fonksiyon
 async function startCallWithFriend(friendId) {
     if (!socket) {
         alert('Lütfen önce giriş yapın!');
