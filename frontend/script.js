@@ -155,12 +155,7 @@ async function init() {
         
         socket.on('receiveCall', async (data) => {
             console.log("Gelen arama:", data);
-            
-            // Eğer peerConnection yoksa veya kapalıysa yeniden oluştur
-            if (!peerConnection || peerConnection.iceConnectionState === 'closed') {
-                await setupPeerConnection(false);
-            }
-            
+            await setupPeerConnection(false); 
             try {
                 if (data.signal.type === 'offer' || data.signal.type === 'answer') {
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(data.signal));
@@ -178,4 +173,165 @@ async function init() {
         });
 
         socket.on('callAccepted', async (signal) => {
-            console.
+            console.log("Arama kabul edildi.");
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+        });
+
+    } catch (e) {
+        console.error('Medya akışı hatası:', e);
+        alert('Kamera ve mikrofon erişimi gerekli!');
+    }
+}
+
+async function setupPeerConnection(isCaller) {
+    if (peerConnection) {
+        peerConnection.close();
+    }
+
+    peerConnection = new RTCPeerConnection(iceServers);
+    
+    localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+    });
+
+    peerConnection.ontrack = (event) => {
+        remoteVideo.srcObject = event.streams[0];
+    };
+
+    peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+            socket.emit('callUser', {
+                userToCall: remotePeerId,
+                signalData: event.candidate,
+                from: currentUser.socketId
+            });
+        }
+    };
+    
+    if (isCaller) {
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        socket.emit('callUser', {
+            userToCall: remotePeerId,
+            signalData: offer,
+            from: currentUser.socketId
+        });
+    }
+}
+
+findMatchBtn.addEventListener('click', async () => {
+    if (!socket) {
+        alert('Lütfen önce giriş yapın!');
+        return;
+    }
+    console.log("Eşleşme aranıyor...");
+    if (peerConnection) peerConnection.close();
+    remoteVideo.srcObject = null;
+    remotePeerId = null;
+    await init();
+    socket.emit('findMatch');
+});
+
+disconnectBtn.addEventListener('click', () => {
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+        remoteVideo.srcObject = null;
+        remotePeerId = null;
+        console.log("Bağlantı kesildi.");
+    }
+});
+
+addFriendBtn.addEventListener('click', async () => {
+    if (!currentUser) {
+        alert('Lütfen önce giriş yapın!');
+        return;
+    }
+
+    const friendId = parseInt(friendInput.value.trim());
+
+    if (isNaN(friendId)) {
+        alert('Lütfen geçerli bir ID girin.');
+        return;
+    }
+
+    if (friendId === currentUser.id) {
+        alert('Kendinizi arkadaş olarak ekleyemezsiniz.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${backendUrl}/add-friend`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fromId: currentUser.id, toId: friendId })
+        });
+        const data = await response.json();
+        alert(data.message);
+
+        if (response.ok) {
+            updateFriendsList();
+        }
+    } catch (err) {
+        console.error("Arkadaş ekleme hatası:", err);
+        alert('Arkadaşlık isteği gönderilirken bir hata oluştu.');
+    }
+});
+
+async function updateFriendsList() {
+    if (!currentUser) return;
+
+    try {
+        const response = await fetch(`${backendUrl}/friends/${currentUser.id}`);
+        const data = await response.json();
+
+        if (response.ok) {
+            friendsListContainer.innerHTML = '';
+            data.friends.forEach(friend => {
+                const friendItem = document.createElement('li');
+                friendItem.textContent = friend.username;
+                friendItem.addEventListener('click', () => startCallWithFriend(friend.id));
+                friendsListContainer.appendChild(friendItem);
+            });
+        }
+    } catch (err) {
+        console.error("Arkadaş listesi çekilemedi:", err);
+    }
+}
+
+async function startCallWithFriend(friendId) {
+    if (!socket) {
+        alert('Lütfen önce giriş yapın!');
+        return;
+    }
+
+    if (peerConnection) {
+        peerConnection.close();
+    }
+    remoteVideo.srcObject = null;
+
+    try {
+        const response = await fetch(`${backendUrl}/get-user-socket-id/${friendId}`);
+        if (!response.ok) {
+            const error = await response.json();
+            alert(error.message);
+            return;
+        }
+        const data = await response.json();
+        const friendSocketId = data.socketId;
+
+        if (!friendSocketId) {
+            alert('Arkadaşınız şu anda çevrimdışı.');
+            return;
+        }
+
+        remotePeerId = friendSocketId;
+        await setupPeerConnection(true);
+
+        console.log(`Arkadaşa arama başlatılıyor: ID ${friendId}, Socket ID ${friendSocketId}`);
+
+    } catch (err) {
+        console.error("Arkadaş socket ID'si alınırken hata oluştu:", err);
+        alert('Arkadaşınıza bağlanırken bir hata oluştu.');
+    }
+}

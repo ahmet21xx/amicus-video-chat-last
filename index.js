@@ -20,6 +20,7 @@ const io = new Server(server, {
 const USERS_FILE = 'users.json';
 let nextUserId = 1; 
 
+// Online olan kullanıcıların ID'leri ve Socket ID'lerini tutar
 let onlineUsers = {}; 
 
 if (!fs.existsSync(USERS_FILE) || fs.readFileSync(USERS_FILE, 'utf8').trim() === '') {
