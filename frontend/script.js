@@ -161,12 +161,10 @@ async function init() {
             }
         });
         
-        // Bu kısım, WebRTC sinyal verisini doğru şekilde işlemek için güncellendi
         socket.on('receiveCall', async (data) => {
             console.log("Gelen arama:", data);
             await setupPeerConnection(false); // setupPeerConnection artık async
             try {
-                // Sinyal verisi offer veya candidate olabilir
                 if (data.signal.type === 'offer') {
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(data.signal));
                     const answer = await peerConnection.createAnswer();
@@ -179,10 +177,10 @@ async function init() {
                 console.error("Gelen sinyal verisi işlenirken hata oluştu:", e);
             }
         });
-        
-        socket.on('callAccepted', (signal) => {
+
+        socket.on('callAccepted', async (signal) => {
             console.log("Arama kabul edildi.");
-            peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
         });
 
     } catch (e) {
@@ -193,7 +191,6 @@ async function init() {
 
 // PeerConnection'ı kuran fonksiyon
 async function setupPeerConnection(isCaller) {
-    // Mevcut bağlantıyı temizle
     if (peerConnection) {
         peerConnection.close();
         peerConnection = null;
@@ -241,7 +238,6 @@ findMatchBtn.addEventListener('click', async () => {
     remoteVideo.srcObject = null;
     remotePeerId = null;
 
-    // init() fonksiyonunun içindeki kodu buraya taşıdık
     await init();
     socket.emit('findMatch');
 });
