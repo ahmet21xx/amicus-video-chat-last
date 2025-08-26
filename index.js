@@ -140,4 +140,44 @@ io.on('connection', (socket) => {
     socket.on('findMatch', () => {
         if (waitingUsers.length > 0) {
             const partnerSocketId = waitingUsers.shift(); 
-            const partnerSocket = io.sockets.sockets.
+            const partnerSocket = io.sockets.sockets.get(partnerSocketId);
+
+            if (partnerSocket && partnerSocket.connected) {
+                console.log(`Eşleşme bulundu: ${socket.id} ve ${partnerSocketId}`);
+                socket.emit('matchFound', { partnerId: partnerSocket.id });
+                partnerSocket.emit('matchFound', { partnerId: socket.id });
+            } else {
+                waitingUsers.push(socket.id);
+                console.log('Eşleşme bulunamadı, kullanıcı havuza eklendi:', socket.id);
+            }
+        } else {
+            waitingUsers.push(socket.id);
+            console.log('Eşleşme bekleniyor, kullanıcı havuza eklendi:', socket.id);
+        }
+    });
+
+    socket.on('callUser', (data) => {
+        io.to(data.userToCall).emit('receiveCall', { signal: data.signalData, from: data.from });
+    });
+
+    socket.on('acceptCall', (data) => {
+        io.to(data.to).emit('callAccepted', data.signal);
+    });
+    
+    socket.on('disconnect', () => {
+        console.log('Kullanıcı ayrıldı:', socket.id);
+        waitingUsers = waitingUsers.filter(id => id !== socket.id);
+        
+        for (const [userId, socketId] of Object.entries(onlineUsers)) {
+            if (socketId === socket.id) {
+                delete onlineUsers[userId];
+                break;
+            }
+        }
+    });
+});
+
+const port = process.env.PORT || 3000;
+server.listen(port, () => {
+    console.log(`Backend çalışıyor: http://localhost:${port}`);
+});
