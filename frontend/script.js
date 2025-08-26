@@ -18,8 +18,8 @@ const disconnectBtn = document.getElementById('disconnectBtn');
 const likeAnimation = document.getElementById('likeAnimation');
 const friendInput = document.getElementById('friendInput');
 const addFriendBtn = document.getElementById('addFriendBtn');
-const messageInput = document.getElementById('messageInput');
-const sendMessageBtn = document.getElementById('sendMessageBtn');
+const messageInput = document.getElementById('message');
+const sendMessageBtn = document.getElementById('sendMessage');
 const currentUserIdDisplay = document.getElementById('currentUserId');
 const friendsListContainer = document.getElementById('friendsList');
 
@@ -35,6 +35,9 @@ const iceServers = {
     ]
 };
 
+// Backend URL'si
+const backendUrl = 'https://amicus-video-chat-last.onrender.com';
+
 // Sayfa yüklenince önce kayıt ekranı göster
 function showInitialScreen() {
     const storedUser = localStorage.getItem('currentUser');
@@ -42,13 +45,13 @@ function showInitialScreen() {
         currentUser = JSON.parse(storedUser);
         loginContainer.style.display = 'none';
         registerContainer.style.display = 'none';
-        chatContainer.style.display = 'block';
+        chatContainer.style.display = 'flex';
         currentUserIdDisplay.textContent = currentUser.id;
         init();
         updateFriendsList(); 
     } else {
         registerContainer.style.display = 'none';
-        loginContainer.style.display = 'block';
+        loginContainer.style.display = 'flex';
         chatContainer.style.display = 'none';
     }
 }
@@ -58,14 +61,14 @@ showInitialScreen();
 goToLogin.addEventListener('click', (e) => {
     e.preventDefault();
     registerContainer.style.display = 'none';
-    loginContainer.style.display = 'block';
+    loginContainer.style.display = 'flex';
 });
 
 // Login ekranı -> Kayıt ekranı
 goToRegister.addEventListener('click', (e) => {
     e.preventDefault();
     loginContainer.style.display = 'none';
-    registerContainer.style.display = 'block';
+    registerContainer.style.display = 'flex';
 });
 
 // Kayıt butonu
@@ -77,7 +80,7 @@ registerBtn.addEventListener('click', async () => {
         return;
     }
     try {
-        const response = await fetch('https://amicus-backend-2.onrender.com/register', {
+        const response = await fetch(`${backendUrl}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -86,7 +89,7 @@ registerBtn.addEventListener('click', async () => {
         if (response.ok) {
             alert('Kayıt başarılı! Lütfen giriş yapın.');
             registerContainer.style.display = 'none';
-            loginContainer.style.display = 'block';
+            loginContainer.style.display = 'flex';
         } else {
             alert('Kayıt başarısız: ' + data.message);
         }
@@ -105,7 +108,7 @@ loginBtn.addEventListener('click', async () => {
         return;
     }
     try {
-        const response = await fetch('https://amicus-backend-2.onrender.com/login', {
+        const response = await fetch(`${backendUrl}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
@@ -116,7 +119,7 @@ loginBtn.addEventListener('click', async () => {
             currentUser = data.user;
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
             loginContainer.style.display = 'none';
-            chatContainer.style.display = 'block';
+            chatContainer.style.display = 'flex';
             currentUserIdDisplay.textContent = currentUser.id;
             init();
             updateFriendsList(); 
@@ -135,7 +138,7 @@ async function init() {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         localVideo.srcObject = localStream;
 
-        socket = io('https://amicus-backend-2.onrender.com', {
+        socket = io(backendUrl, {
             query: { userId: currentUser.id }
         });
 
@@ -238,6 +241,7 @@ disconnectBtn.addEventListener('click', () => {
     }
 });
 
+
 // Arkadaş Ekleme butonu
 addFriendBtn.addEventListener('click', async () => {
     if (!currentUser) {
@@ -258,7 +262,7 @@ addFriendBtn.addEventListener('click', async () => {
     }
 
     try {
-        const response = await fetch('https://amicus-backend-2.onrender.com/add-friend', {
+        const response = await fetch(`${backendUrl}/add-friend`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fromId: currentUser.id, toId: friendId })
@@ -275,12 +279,13 @@ addFriendBtn.addEventListener('click', async () => {
     }
 });
 
+
 // Arkadaş listesini güncelleyen fonksiyon
 async function updateFriendsList() {
     if (!currentUser) return;
 
     try {
-        const response = await fetch(`https://amicus-backend-2.onrender.com/friends/${currentUser.id}`);
+        const response = await fetch(`${backendUrl}/friends/${currentUser.id}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -310,7 +315,7 @@ async function startCallWithFriend(friendId) {
     remoteVideo.srcObject = null;
 
     try {
-        const response = await fetch(`https://amicus-backend-2.onrender.com/get-user-socket-id/${friendId}`);
+        const response = await fetch(`${backendUrl}/get-user-socket-id/${friendId}`);
         if (!response.ok) {
             const error = await response.json();
             alert(error.message);
