@@ -108,4 +108,39 @@ app.get('/friends/:userId', (req, res) => {
     
     const friendsList = user.friends.map(friendId => {
         const friend = users.find(u => u.id === friendId);
-        return { id: friend.id, username:
+        return { id: friend.id, username: friend.username };
+    });
+
+    res.json({ friends: friendsList });
+});
+
+app.get('/get-user-socket-id/:userId', (req, res) => {
+    const userId = parseInt(req.params.userId);
+    const socketId = onlineUsers[userId];
+    if (socketId) {
+        res.json({ socketId });
+    } else {
+        res.status(404).json({ message: 'Kullanıcı çevrimdışı veya bulunamadı.' });
+    }
+});
+
+let waitingUsers = [];
+
+io.on('connection', (socket) => {
+    console.log('Yeni bir kullanıcı bağlandı:', socket.id);
+    const userId = socket.handshake.query.userId;
+    console.log(`Kullanıcı ID'si: ${userId}`);
+
+    if (userId) {
+        onlineUsers[userId] = socket.id;
+    }
+
+    socket.emit('yourId', socket.id);
+
+    socket.on('findMatch', () => {
+        if (waitingUsers.length > 0) {
+            const partnerSocketId = waitingUsers.shift(); 
+            const partnerSocket = io.sockets.sockets.get(partnerSocketId);
+
+            if (partnerSocket && partnerSocket.connected) {
+                console.log(`Eşleşme bulundu: ${socket.id} ve
