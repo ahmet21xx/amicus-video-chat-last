@@ -140,7 +140,4 @@ io.on('connection', (socket) => {
     socket.on('findMatch', () => {
         if (waitingUsers.length > 0) {
             const partnerSocketId = waitingUsers.shift(); 
-            const partnerSocket = io.sockets.sockets.get(partnerSocketId);
-
-            if (partnerSocket && partnerSocket.connected) {
-                console.log(`Eşleşme bulundu: ${socket.id} ve
+            const partnerSocket = io.sockets.sockets.
