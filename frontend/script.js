@@ -161,16 +161,25 @@ async function init() {
             }
         });
         
-        socket.on('receiveCall', (data) => {
+        // Bu kısım, WebRTC sinyal verisini doğru şekilde işlemek için güncellendi
+        socket.on('receiveCall', async (data) => {
             console.log("Gelen arama:", data);
-            setupPeerConnection(false);
-            peerConnection.setRemoteDescription(new RTCSessionDescription(data.signal));
-            peerConnection.createAnswer().then(answer => {
-                peerConnection.setLocalDescription(answer);
-                socket.emit('acceptCall', { signal: answer, to: data.from });
-            });
+            await setupPeerConnection(false); // setupPeerConnection artık async
+            try {
+                // Sinyal verisi offer veya candidate olabilir
+                if (data.signal.type === 'offer') {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.signal));
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    socket.emit('acceptCall', { signal: answer, to: data.from });
+                } else if (data.signal.type === 'candidate') {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(data.signal));
+                }
+            } catch (e) {
+                console.error("Gelen sinyal verisi işlenirken hata oluştu:", e);
+            }
         });
-
+        
         socket.on('callAccepted', (signal) => {
             console.log("Arama kabul edildi.");
             peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
@@ -183,7 +192,13 @@ async function init() {
 }
 
 // PeerConnection'ı kuran fonksiyon
-function setupPeerConnection(isCaller) {
+async function setupPeerConnection(isCaller) {
+    // Mevcut bağlantıyı temizle
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+    }
+
     peerConnection = new RTCPeerConnection(iceServers);
     
     localStream.getTracks().forEach(track => {
@@ -205,19 +220,18 @@ function setupPeerConnection(isCaller) {
     };
     
     if (isCaller) {
-        peerConnection.createOffer().then(offer => {
-            peerConnection.setLocalDescription(offer);
-            socket.emit('callUser', {
-                userToCall: remotePeerId,
-                signalData: offer,
-                from: currentUser.socketId
-            });
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        socket.emit('callUser', {
+            userToCall: remotePeerId,
+            signalData: offer,
+            from: currentUser.socketId
         });
     }
 }
 
 // Yeni Eşleşme Bul butonu
-findMatchBtn.addEventListener('click', () => {
+findMatchBtn.addEventListener('click', async () => {
     if (!socket) {
         alert('Lütfen önce giriş yapın!');
         return;
@@ -227,6 +241,8 @@ findMatchBtn.addEventListener('click', () => {
     remoteVideo.srcObject = null;
     remotePeerId = null;
 
+    // init() fonksiyonunun içindeki kodu buraya taşıdık
+    await init();
     socket.emit('findMatch');
 });
 
@@ -330,7 +346,7 @@ async function startCallWithFriend(friendId) {
         }
 
         remotePeerId = friendSocketId;
-        setupPeerConnection(true);
+        await setupPeerConnection(true);
 
         console.log(`Arkadaşa arama başlatılıyor: ID ${friendId}, Socket ID ${friendSocketId}`);
 
