@@ -14,7 +14,7 @@ const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
 const findMatchBtn = document.getElementById('findMatchBtn');
 const sendLikeBtn = document.getElementById('sendLikeBtn');
-const disconnectBtn = document.getElementById('disconnectBtn');
+const disconnectBtn = document.getElementById('disconnect');
 const likeAnimation = document.getElementById('likeAnimation');
 const friendInput = document.getElementById('friendInput');
 const addFriendBtn = document.getElementById('addFriendBtn');
@@ -332,7 +332,3 @@ async function startCallWithFriend(friendId) {
         console.log(`Arkadaşa arama başlatılıyor: ID ${friendId}, Socket ID ${friendSocketId}`);
 
     } catch (err) {
-        console.error("Arkadaş socket ID'si alınırken hata oluştu:", err);
-        alert('Arkadaşınıza bağlanırken bir hata oluştu.');
-    }
-}
