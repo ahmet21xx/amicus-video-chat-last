@@ -165,12 +165,14 @@ async function init() {
             console.log("Gelen arama:", data);
             await setupPeerConnection(false); // setupPeerConnection artık async
             try {
-                if (data.signal.type === 'offer') {
+                if (data.signal.type === 'offer' || data.signal.type === 'answer') {
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(data.signal));
-                    const answer = await peerConnection.createAnswer();
-                    await peerConnection.setLocalDescription(answer);
-                    socket.emit('acceptCall', { signal: answer, to: data.from });
-                } else if (data.signal.type === 'candidate') {
+                    if (data.signal.type === 'offer') {
+                        const answer = await peerConnection.createAnswer();
+                        await peerConnection.setLocalDescription(answer);
+                        socket.emit('callUser', { userToCall: data.from, signalData: answer, from: currentUser.socketId });
+                    }
+                } else if (data.signal.candidate) {
                     await peerConnection.addIceCandidate(new RTCIceCandidate(data.signal));
                 }
             } catch (e) {
