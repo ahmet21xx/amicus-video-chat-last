@@ -43,7 +43,7 @@ function showInitialScreen() {
         loginContainer.style.display = 'none';
         registerContainer.style.display = 'none';
         chatContainer.style.display = 'block';
-        currentUserIdDisplay.textContent = currentUser.id; // ID'yi ekrana yazdır
+        currentUserIdDisplay.textContent = currentUser.id;
         init();
         updateFriendsList(); 
     } else {
@@ -117,7 +117,7 @@ loginBtn.addEventListener('click', async () => {
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
             loginContainer.style.display = 'none';
             chatContainer.style.display = 'block';
-            currentUserIdDisplay.textContent = currentUser.id; // ID'yi ekrana yazdır
+            currentUserIdDisplay.textContent = currentUser.id;
             init();
             updateFriendsList(); 
         } else {
@@ -135,7 +135,7 @@ async function init() {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         localVideo.srcObject = localStream;
 
-        socket = io('https://amicus-backend-2.onrender.com/', {
+        socket = io('https://amicus-backend-2.onrender.com', {
             query: { userId: currentUser.id }
         });
 
@@ -238,7 +238,6 @@ disconnectBtn.addEventListener('click', () => {
     }
 });
 
-
 // Arkadaş Ekleme butonu
 addFriendBtn.addEventListener('click', async () => {
     if (!currentUser) {
@@ -275,7 +274,6 @@ addFriendBtn.addEventListener('click', async () => {
         alert('Arkadaşlık isteği gönderilirken bir hata oluştu.');
     }
 });
-
 
 // Arkadaş listesini güncelleyen fonksiyon
 async function updateFriendsList() {
