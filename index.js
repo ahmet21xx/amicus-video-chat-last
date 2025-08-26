@@ -194,6 +194,7 @@ io.on('connection', (socket) => {
 });
 
 // Sunucuyu başlat (Express ve Socket.IO için)
-server.listen(3000, () => {
-    console.log('Backend çalışıyor: http://localhost:3000');
+const port = process.env.PORT || 3000;
+server.listen(port, () => {
+    console.log(`Backend çalışıyor: http://localhost:${port}`);
 });
