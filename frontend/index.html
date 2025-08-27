@@ -1,34 +1,71 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Amicus Video Chat</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMİCUS</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Login ekranı -->
-  <div id="login-container" class="centered">
-    <h2>Giriş Yap</h2>
-    <input type="text" id="username" placeholder="Kullanıcı Adı" />
-    <input type="password" id="password" placeholder="Şifre" />
-    <button id="loginBtn">Giriş</button>
-  </div>
 
-  <!-- Sohbet ekranı -->
-  <div id="chat-container" class="hidden">
-    <h2>Amicus Video Chat</h2>
+<main id="loginContainer" class="auth-container">
+    <div class="auth-box">
+        <h1>AMİCUS</h1>
+        <h2>Giriş Yap</h2>
+        <input type="text" id="loginUsername" placeholder="Kullanıcı adı" class="form-input">
+        <input type="password" id="loginPassword" placeholder="Şifre" class="form-input">
+        <button id="loginBtn" class="control-button">Giriş Yap</button>
+        <p>Hesabınız yok mu? <a href="#" id="goToRegister">Kayıt Ol</a></p>
+    </div>
+</main>
+
+<main id="registerContainer" class="auth-container" style="display:none;">
+    <div class="auth-box">
+        <h1>AMİCUS</h1>
+        <h2>Kayıt Ol</h2>
+        <input type="text" id="registerUsername" placeholder="Kullanıcı adı" class="form-input">
+        <input type="password" id="registerPassword" placeholder="Şifre" class="form-input">
+        <button id="registerBtn" class="control-button">Kayıt Ol</button>
+        <p>Zaten kayıtlı mısınız? <a href="#" id="goToLogin">Giriş Yap</a></p>
+    </div>
+</main>
+
+<main id="chatContainer" class="chat-container" style="display:none;">
+    <div class="user-id-display">
+        ID: <span id="currentUserId"></span>
+    </div>
+    
     <div class="video-container">
-      <video id="localVideo" autoplay muted playsinline></video>
-      <video id="remoteVideo" autoplay playsinline></video>
+        <div class="local-video-wrapper">
+            <video id="localVideo" autoplay muted></video>
+            <div class="video-overlay">Ben</div>
+        </div>
+        <div class="remote-video-wrapper">
+            <video id="remoteVideo" autoplay></video>
+            <div class="video-overlay">Karşı Taraf</div>
+        </div>
     </div>
-    <div class="controls">
-      <button id="addFriendBtn">Arkadaş Ekle</button>
-      <button id="startCallBtn">Yeni Bağlantı Kur</button>
-      <button id="endCallBtn" class="danger">Bağlantıyı Kes</button>
-    </div>
-  </div>
 
-  <script src="script.js"></script>
+    <div class="action-buttons">
+        <button id="findMatchBtn" class="control-button">Yeni Eşleşme Bul</button>
+        <button id="disconnectBtn" class="control-button">Bağlantıyı Kes</button>
+    </div>
+
+    <div class="friend-actions-container">
+        <h3>Arkadaş Ekle</h3>
+        <div class="add-friend-input">
+            <input type="number" id="friendInput" placeholder="Arkadaş ID" class="form-input">
+            <button id="addFriendBtn" class="control-button">Ekle</button>
+        </div>
+        
+        <div class="friends-list-container">
+            <h3>Arkadaşlarım</h3>
+            <ul id="friendsList"></ul>
+        </div>
+    </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

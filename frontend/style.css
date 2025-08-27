@@ -1,83 +1,241 @@
-/* Genel stiller */
-body {
-  font-family: Arial, sans-serif;
-  background: #1e1e2f;
-  color: #fff;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  height: 100vh;
-  justify-content: center;
-  align-items: center;
+/* Genel Stil Ayarları */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background-color: #1a1a1a;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
 }
 
-/* Ortalanmış kutular */
-.centered {
-  background: #2c2c3e;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-  text-align: center;
+/* Kimlik Doğrulama Kutuları (Kayıt/Giriş) */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
 }
 
-.hidden {
-  display: none;
+.auth-box {
+    background-color: #2c2c2c;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+    width: 350px;
+    text-align: center;
 }
 
-/* Inputlar */
-input {
-  display: block;
-  width: 250px;
-  margin: 10px auto;
-  padding: 10px;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
+.auth-box h1 {
+    margin-bottom: 10px;
+    font-size: 38px;
+    color: #00b894; /* Yeşil vurgu rengi */
 }
 
-/* Butonlar */
-button {
-  padding: 10px 20px;
-  margin: 10px;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 16px;
-  background: #4CAF50;
-  color: white;
-  transition: 0.3s;
+.auth-box h2 {
+    margin-bottom: 25px;
+    font-size: 22px;
+    font-weight: normal;
+    color: #bbb;
 }
 
-button:hover {
-  background: #45a049;
+.form-input {
+    width: 100%;
+    padding: 14px 18px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 8px;
+    background-color: #3a3a3a;
+    color: #fff;
+    font-size: 18px;
+    transition: background-color 0.3s ease;
 }
 
-button.danger {
-  background: #d9534f;
+.form-input::placeholder {
+    color: #888;
 }
 
-button.danger:hover {
-  background: #c9302c;
+.form-input:focus {
+    outline: none;
+    background-color: #444;
 }
 
-/* Video alanı */
+.control-button {
+    padding: 14px;
+    margin-bottom: 15px;
+    background-color: #00b894;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.control-button:hover {
+    background-color: #008f75;
+}
+
+.auth-box a {
+    color: #00b894;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.auth-box a:hover {
+    color: #00a082;
+    text-decoration: underline;
+}
+
+/* Sohbet Sayfası Tasarımı */
+.chat-container {
+    display: flex;
+    flex-direction: column; /* Dikey düzenleme */
+    width: 90%;
+    max-width: 1200px;
+    background-color: #2c2c2c;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    gap: 20px;
+    position: relative; /* ID kutucuğu için */
+}
+
+.user-id-display {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 10;
+}
+
+/* Video ve Kontrol Alanları */
 .video-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 20px;
-  margin: 20px 0;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    flex-grow: 1;
+    justify-content: center;
 }
 
-video {
-  width: 320px;
-  height: 240px;
-  background: black;
-  border-radius: 10px;
-  transform: scaleX(-1); /* 👈 Ayna efekti */
-  object-fit: cover;
+.local-video-wrapper, .remote-video-wrapper {
+    flex: 1;
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #000;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    min-height: 450px;
 }
 
-.controls {
-  text-align: center;
+.video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.video-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+/* Kendi videomu aynalama */
+.local-video-wrapper video {
+    transform: scaleX(-1);
+    -webkit-transform: scaleX(-1);
+}
+
+/* Buton ve Arkadaşlık Bölümleri */
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.action-buttons .control-button {
+    flex: 1;
+    margin: 0;
+}
+
+.friend-actions-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background-color: #3a3a3a;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.friend-actions-container h3 {
+    margin: 0 0 15px 0;
+    font-size: 20px;
+    color: #00b894;
+    border-bottom: 2px solid #00b894;
+    padding-bottom: 10px;
+}
+
+.add-friend-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.add-friend-input .form-input {
+    flex-grow: 1;
+    margin: 0;
+}
+
+.add-friend-input .control-button {
+    width: auto;
+    padding: 10px 15px;
+    margin: 0;
+}
+
+/* Arkadaş Listesi */
+.friends-list-container {
+    /* Arkadaş listesi zaten .friend-actions-container içinde */
+}
+
+.friends-list-container h3 {
+    color: #fff;
+    border-bottom: 2px solid #fff;
+}
+
+.friends-list-container ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.friends-list-container ul li {
+    background-color: #444;
+    margin-bottom: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    color: #fff;
+}
+
+.friends-list-container ul li:hover {
+    background-color: #555;
 }
