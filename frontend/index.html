@@ -8,25 +8,24 @@
 </head>
 <body>
   <!-- Login ekranı -->
-  <div id="login-wrapper">
-    <div class="login-container">
-      <h2>Giriş Yap</h2>
-      <form id="loginForm">
-        <input type="text" id="username" placeholder="Kullanıcı Adı" required />
-        <input type="password" id="password" placeholder="Şifre" required />
-        <button type="submit">Giriş Yap</button>
-      </form>
-    </div>
+  <div id="login-container" class="centered">
+    <h2>Giriş Yap</h2>
+    <input type="text" id="username" placeholder="Kullanıcı Adı" />
+    <input type="password" id="password" placeholder="Şifre" />
+    <button id="loginBtn">Giriş</button>
   </div>
 
-  <!-- Video chat ekranı -->
-  <div id="video-chat-wrapper">
+  <!-- Sohbet ekranı -->
+  <div id="chat-container" class="hidden">
+    <h2>Amicus Video Chat</h2>
     <div class="video-container">
-      <h2 id="welcomeMessage">Video Sohbet</h2>
-      <div class="videos">
-        <video id="localVideo" autoplay playsinline muted></video>
-        <video id="remoteVideo" autoplay playsinline></video>
-      </div>
+      <video id="localVideo" autoplay muted playsinline></video>
+      <video id="remoteVideo" autoplay playsinline></video>
+    </div>
+    <div class="controls">
+      <button id="addFriendBtn">Arkadaş Ekle</button>
+      <button id="startCallBtn">Yeni Bağlantı Kur</button>
+      <button id="endCallBtn" class="danger">Bağlantıyı Kes</button>
     </div>
   </div>
 
